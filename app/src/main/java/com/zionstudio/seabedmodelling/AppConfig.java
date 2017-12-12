@@ -8,4 +8,7 @@ package com.zionstudio.seabedmodelling;
 public class AppConfig {
     public static final boolean IS_DEBUG = true;
 
+    //屏幕宽高
+    public static float displayWidth;
+    public static float displayHeight;
 }
