@@ -17,6 +17,8 @@ public class MainActivity extends AppCompatActivity {
         //设置横屏
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        SeabedSurfaceView seabedSurfaceView = new SeabedSurfaceView(this);
+        Seabed seabed = new Seabed(seabedSurfaceView);
         setContentView(R.layout.activity_main);
     }
 }
