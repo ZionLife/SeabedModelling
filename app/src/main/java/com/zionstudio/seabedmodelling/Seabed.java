@@ -4,6 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 
+import com.zionstudio.seabedmodelling.utils.ShaderHelper;
+import com.zionstudio.seabedmodelling.utils.TextResourceReader;
+
 import static com.zionstudio.seabedmodelling.Constants.BYTES_PER_FLOAT;
 
 /**
@@ -22,13 +25,16 @@ public class Seabed {
     private short[] mIndexData; //顶点数据
     private float[] mHeightmapData; //高度数据
 
+    private int mProgram;//Program id
+
     public Seabed(SeabedSurfaceView view) {
         initVertexData();
         initShader(view);
     }
 
     private void initShader(SeabedSurfaceView view) {
-
+        mProgram = ShaderHelper.buildProgram(TextResourceReader.readTextFileFromResource(MyApplication.mContext, R.raw.heightmap_vertex_shader),
+                TextResourceReader.readTextFileFromResource(MyApplication.mContext, R.raw.heightmap_fragment_shader));
     }
 
 //    private void initVertexData() {
@@ -88,7 +94,6 @@ public class Seabed {
         bitmap.recycle();
 
         mHeightmapData = new float[bmpWidth * bmpHeight * POSITION_COMPONENT_COUNT];
-
         int offset = 0;
         for (int row = 0; row < bmpHeight; row++) {
             for (int col = 0; col < bmpWidth; col++) {
@@ -102,9 +107,14 @@ public class Seabed {
             }
         }
 
+        //构造索引数据
+        createIndexData();
+    }
+
+    private void createIndexData() {
         //createIndexData
         mIndexData = new short[mVerCounts];
-        offset = 0;
+        int offset = 0;
         for (int row = 0; row < bmpHeight - 1; row++) {
             for (int col = 0; col < bmpWidth - 1; col++) {
                 short topLeftIndexNum = (short) (row * bmpWidth + col);
@@ -113,15 +123,18 @@ public class Seabed {
                 short bottomRightIndexNum = (short) ((row + 1) * bmpWidth + col + 1);
 
                 //Write out two triangles.
+                //1.
                 mIndexData[offset++] = topLeftIndexNum;
                 mIndexData[offset++] = bottomLeftIndexNum;
                 mIndexData[offset++] = topRightIndexNum;
 
+                //2.
                 mIndexData[offset++] = topRightIndexNum;
                 mIndexData[offset++] = bottomLeftIndexNum;
                 mIndexData[offset++] = bottomRightIndexNum;
             }
         }
-
     }
+
+
 }
