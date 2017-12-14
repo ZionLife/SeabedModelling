@@ -8,6 +8,8 @@ import android.view.WindowManager;
 
 public class MainActivity extends AppCompatActivity {
 
+    private SeabedSurfaceView mSurfaceView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -17,8 +19,21 @@ public class MainActivity extends AppCompatActivity {
         //设置横屏
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        SeabedSurfaceView seabedSurfaceView = new SeabedSurfaceView(this);
-        Seabed seabed = new Seabed(seabedSurfaceView);
-        setContentView(R.layout.activity_main);
+        mSurfaceView = new SeabedSurfaceView(this);
+        mSurfaceView.requestFocus();
+        mSurfaceView.setFocusableInTouchMode(true);
+        setContentView(mSurfaceView);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mSurfaceView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mSurfaceView.onPause();
     }
 }
