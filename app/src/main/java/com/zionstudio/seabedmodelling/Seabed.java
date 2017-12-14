@@ -47,7 +47,7 @@ public class Seabed {
     private FloatBuffer mVertexBuffer;
     private FloatBuffer mTexCoorBuffer;
     private short[] mIndexData; //顶点索引数据
-    private float[] mHeightmapData; //高度数据
+    private float[][] mHeightmapData; //高度数据
 
 
     private int mProgram;//Program id
@@ -55,6 +55,11 @@ public class Seabed {
     private int maTexCoorHandle; //顶点纹理坐标属性的引用id
     private int muMVPMatrixHandle; //总变换矩阵的引用id
     private int sTextureGrassHandle; //草地纹理
+
+    private static final float LAND_HIGHEST = 20f; //陆地最大高度差
+    private static final float LAND_HIGH_ADJUST = -2f; //陆地的高度调整值
+
+    private final float UNIT_SIZE = 1.0f;
 
     public Seabed(SeabedSurfaceView view) {
         initVertexData();
@@ -126,37 +131,101 @@ public class Seabed {
         bitmap.getPixels(pixels, 0, bmpWidth, 0, 0, bmpWidth, bmpHeight);
         bitmap.recycle();
 
-        mHeightmapData = new float[bmpWidth * bmpHeight * POSITION_COMPONENT_COUNT];
+        mHeightmapData = new float[bmpWidth][bmpHeight];
+//        mHeightmapData = new float[bmpWidth * bmpHeight * POSITION_COMPONENT_COUNT];
+//        int offset = 0;
+//        for (int row = 0; row < bmpHeight; row++) {
+//            for (int col = 0; col < bmpWidth; col++) {
+//                final float xPosition = ((float) col / (float) (bmpWidth - 1)) - 0.5f;
+//                final float yPosition = (float) Color.red(pixels[row * bmpHeight] + col) / (float) 255;
+//                final float zPosition = ((float) col / (float) (bmpHeight - 1)) - 0.5f;
+//
+//                mHeightmapData[offset++] = xPosition;
+//                mHeightmapData[offset++] = yPosition;
+//                mHeightmapData[offset++] = zPosition;
+//            }
+//        }
         int offset = 0;
         for (int row = 0; row < bmpHeight; row++) {
             for (int col = 0; col < bmpWidth; col++) {
-                final float xPosition = ((float) col / (float) (bmpWidth - 1)) - 0.5f;
-                final float yPosition = (float) Color.red(pixels[row * bmpHeight] + col) / (float) 255;
-                final float zPosition = ((float) col / (float) (bmpHeight - 1)) - 0.5f;
-
-                mHeightmapData[offset++] = xPosition;
-                mHeightmapData[offset++] = yPosition;
-                mHeightmapData[offset++] = zPosition;
+                int color = pixels[row * bmpWidth + col];
+                int r = Color.red(color);
+                int g = Color.green(color);
+                int b = Color.blue(color);
+                int h = (r + g + b) / 3;
+                //像素顶点的海拔高度 = 最大高差 * 像素值 / 255.0 + 最低海拔
+                mHeightmapData[row][col] = h * LAND_HIGHEST / 255 + LAND_HIGH_ADJUST;
             }
         }
 
+//        //构造顶点数据
+//        mVertexData = new float[mVerCounts];
+//        offset = 0;
+//        for (int row = 0; row < bmpHeight - 1; row++) {
+//            for (int col = 0; col < bmpWidth - 1; col++) {
+//                short topLeftIndexNum = (short) (row * bmpWidth + col);
+//                short topRightIndexNum = (short) (row * bmpWidth + col + 1);
+//                short bottomLeftIndexNum = (short) ((row + 1) * bmpWidth + col);
+//                short bottomRightIndexNum = (short) ((row + 1) * bmpWidth + col + 1);
+//
+//                mVertexData[offset++] = mHeightmapData[topLeftIndexNum];
+//                mVertexData[offset++] = mHeightmapData[bottomLeftIndexNum];
+//                mVertexData[offset++] = mHeightmapData[topRightIndexNum];
+//
+//                mVertexData[offset++] = mHeightmapData[topRightIndexNum];
+//                mVertexData[offset++] = mHeightmapData[bottomLeftIndexNum];
+//                mVertexData[offset++] = mHeightmapData[bottomRightIndexNum];
+//            }
+//        }
+
         //构造顶点数据
-        mVertexData = new float[mVerCounts];
+        mVertexData = new float[mVerCounts * 3];
         offset = 0;
         for (int row = 0; row < bmpHeight - 1; row++) {
             for (int col = 0; col < bmpWidth - 1; col++) {
-                short topLeftIndexNum = (short) (row * bmpWidth + col);
-                short topRightIndexNum = (short) (row * bmpWidth + col + 1);
-                short bottomLeftIndexNum = (short) ((row + 1) * bmpWidth + col);
-                short bottomRightIndexNum = (short) ((row + 1) * bmpWidth + col + 1);
+                float topLeftX = -UNIT_SIZE * (bmpWidth - 1) / 2 + col * UNIT_SIZE; //计算当前小格子左上侧点的X坐标
+                float topLeftZ = -UNIT_SIZE * (bmpHeight - 1) / 2 + row * UNIT_SIZE; //计算当前小格子左上侧点的Z坐标
 
-                mVertexData[offset++] = mHeightmapData[topLeftIndexNum];
-                mVertexData[offset++] = mHeightmapData[bottomLeftIndexNum];
-                mVertexData[offset++] = mHeightmapData[topRightIndexNum];
+                //构建三角形
+                //1.
+                mVertexData[offset++] = topLeftX;
+                mVertexData[offset++] = mHeightmapData[row][col];
+                mVertexData[offset++] = topLeftZ;
 
-                mVertexData[offset++] = mHeightmapData[topRightIndexNum];
-                mVertexData[offset++] = mHeightmapData[bottomLeftIndexNum];
-                mVertexData[offset++] = mHeightmapData[bottomRightIndexNum];
+                mVertexData[offset++] = topLeftX;
+                mVertexData[offset++] = mHeightmapData[row + 1][col];
+                mVertexData[offset++] = topLeftZ + UNIT_SIZE;
+
+                mVertexData[offset++] = topLeftX + UNIT_SIZE;
+                mVertexData[offset++] = mHeightmapData[row][col + 1];
+                mVertexData[offset++] = topLeftZ;
+
+                //2.
+                mVertexData[offset++] = topLeftX + UNIT_SIZE;
+                mVertexData[offset++] = mHeightmapData[row][col + 1];
+                mVertexData[offset++] = topLeftZ;
+
+                mVertexData[offset++] = topLeftX;
+                mVertexData[offset++] = mHeightmapData[row + 1][col];
+                mVertexData[offset++] = topLeftZ + UNIT_SIZE;
+
+                mVertexData[offset++] = topLeftX + UNIT_SIZE;
+                mVertexData[offset++] = mHeightmapData[row + 1][col + 1];
+                mVertexData[offset++] = topLeftZ + UNIT_SIZE;
+
+//                short topLeftIndexNum = (short) (row * bmpWidth + col);
+//                short topRightIndexNum = (short) (row * bmpWidth + col + 1);
+//                short bottomLeftIndexNum = (short) ((row + 1) * bmpWidth + col);
+//                short bottomRightIndexNum = (short) ((row + 1) * bmpWidth + col + 1);
+//
+//
+//                mVertexData[offset++] = mHeightmapData[topLeftIndexNum];
+//                mVertexData[offset++] = mHeightmapData[bottomLeftIndexNum];
+//                mVertexData[offset++] = mHeightmapData[topRightIndexNum];
+//
+//                mVertexData[offset++] = mHeightmapData[topRightIndexNum];
+//                mVertexData[offset++] = mHeightmapData[bottomLeftIndexNum];
+//                mVertexData[offset++] = mHeightmapData[bottomRightIndexNum];
             }
         }
 
