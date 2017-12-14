@@ -1,4 +1,3 @@
-#version 120
 uniform mat4 uMVPMatrix; //总变换矩阵
 attribute vec3 aPosition; //顶点位置
 attribute vec2 aTexCoor; //顶点纹理坐标
