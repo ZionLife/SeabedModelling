@@ -133,7 +133,7 @@ public class SeabedSurfaceView extends GLSurfaceView {
             float ratio = (float) width / height;
             //生成透视投影矩阵
 //            MatrixState.setProjectFrustum(-ratio, ratio, -1, 1, 1, 100);
-            MatrixState.setProjectFrustum(-1.777f, 1.777f, -1, 1, 1, 100);
+            MatrixState.setProjectFrustum(-ratio, ratio, -1, 1, 1, 100);
             //产生摄像机9参数位置矩阵
             MatrixState.setCamera(cx, 3, cz, tx, 1, tz, 0, 1, 0);
         }
