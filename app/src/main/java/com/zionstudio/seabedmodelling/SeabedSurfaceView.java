@@ -19,6 +19,7 @@ import javax.microedition.khronos.opengles.GL10;
 import static android.opengl.GLES20.GL_COLOR_BUFFER_BIT;
 import static android.opengl.GLES20.GL_DECR;
 import static android.opengl.GLES20.GL_DEPTH_BITS;
+import static android.opengl.GLES20.GL_DEPTH_BUFFER_BIT;
 import static android.opengl.GLES20.GL_DEPTH_TEST;
 import static android.opengl.GLES20.GL_LINEAR;
 import static android.opengl.GLES20.GL_NEAREST;
@@ -141,7 +142,7 @@ public class SeabedSurfaceView extends GLSurfaceView {
         public void onDrawFrame(GL10 gl) {
             Logger.i(TAG, "onDrawFrame");
             //清除深度缓冲与颜色缓冲
-            glClear(GL_DEPTH_BITS | GL_COLOR_BUFFER_BIT);
+            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
             MatrixState.pushMatrix();
             mSeabed.draw(mSeabedId);
